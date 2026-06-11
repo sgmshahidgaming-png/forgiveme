@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "YOURTEAMID.app.forgiveme.www",
+        "paths": ["/s/*", "/payment-success", "/payment-cancel"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.npm
+
+# Build output
+dist/
+build/
+
+# Environment — KABHI GIT MEIN MAT DAALO
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development.local
+
+# Capacitor native
+android/
+ios/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel (local config only)
+.vercel

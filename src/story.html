@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0808" />
+  <title>A letter for you — Forgivemе</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=Josefin+Sans:wght@200;300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --deep: #0d0808; --gold: #d4a85c; --gold2: #f0c97a;
+      --cream: #faf6f0; --muted: rgba(250,246,240,.4);
+      --ff-display: 'Cormorant Garamond', serif;
+      --ff-sans: 'Josefin Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--deep);
+      color: var(--cream);
+      font-family: var(--ff-sans);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 560px;
+      width: 100%;
+      background: linear-gradient(145deg, #1a0808, #0d0505);
+      border: 1px solid rgba(212,168,92,.15);
+      border-radius: 24px;
+      padding: 48px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .eyebrow { font-size: .5rem; letter-spacing: .35em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+    .name { font-family: var(--ff-display); font-size: 2.5rem; font-style: italic; font-weight: 300; margin-bottom: 2rem; }
+    .divider { height: 1px; background: rgba(212,168,92,.15); margin-bottom: 2rem; }
+    .body { font-family: var(--ff-display); font-size: 1.15rem; font-style: italic; font-weight: 300; line-height: 1.9; color: rgba(250,246,240,.8); margin-bottom: 2rem; white-space: pre-wrap; }
+    .photos { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 2rem; }
+    .photos img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,.08); flex-shrink: 0; }
+    .from { font-size: .5rem; letter-spacing: .25em; text-transform: uppercase; color: var(--muted); text-align: right; }
+    .from-name { font-family: var(--ff-display); font-size: 1.1rem; font-style: italic; color: var(--gold); text-align: right; }
+    .loading { text-align: center; color: var(--muted); font-family: var(--ff-display); font-style: italic; font-size: 1.2rem; }
+
+    /* ─── ACTION BUTTONS ───────────────────────────────────── */
+    .actions {
+      max-width: 560px;
+      width: 100%;
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      flex: 1;
+      min-width: 120px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 13px 20px;
+      border-radius: 100px;
+      font-family: var(--ff-sans);
+      font-size: .55rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 1px solid rgba(212,168,92,.25);
+      transition: all .25s;
+      text-decoration: none;
+    }
+    .btn-share {
+      background: linear-gradient(135deg, rgba(212,168,92,.2), rgba(139,32,32,.2));
+      color: var(--gold2);
+    }
+    .btn-share:hover { background: linear-gradient(135deg, rgba(212,168,92,.3), rgba(139,32,32,.3)); }
+    .btn-download {
+      background: rgba(255,255,255,.04);
+      color: var(--cream);
+      border-color: rgba(255,255,255,.1);
+    }
+    .btn-download:hover { background: rgba(255,255,255,.08); }
+    .btn-copy {
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      border-color: rgba(255,255,255,.07);
+    }
+    .btn-copy:hover { color: var(--cream); }
+
+    .cta {
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .cta a {
+      display: inline-block;
+      color: var(--muted);
+      font-family: var(--ff-sans);
+      font-size: .5rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 10px 0;
+      transition: color .2s;
+    }
+    .cta a:hover { color: var(--gold); }
+
+    /* toast */
+    #toast {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: rgba(212,168,92,.12); border: 1px solid rgba(212,168,92,.2);
+      color: var(--gold2); font-family: var(--ff-sans); font-size: .55rem;
+      letter-spacing: .2em; text-transform: uppercase; padding: 12px 24px;
+      border-radius: 100px; opacity: 0; transition: all .3s; pointer-events: none;
+      backdrop-filter: blur(20px); white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* download progress */
+    #dl-progress {
+      display: none; max-width: 560px; width: 100%;
+      margin-top: 8px; text-align: center;
+      font-size: .5rem; letter-spacing: .15em;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="root">
+    <div class="loading">Loading your story…</div>
+  </div>
+
+  <div class="actions" id="actions" style="display:none">
+    <button class="btn btn-share" id="btn-share" onclick="handleShare()">✦ Share</button>
+    <button class="btn btn-download" id="btn-download" onclick="handleDownload()">↓ Save as Image</button>
+    <button class="btn btn-copy" id="btn-copy" onclick="handleCopy()">Copy Link</button>
+  </div>
+  <div id="dl-progress">Generating image…</div>
+
+  <div class="cta">
+    <a href="/">Create your own story on Forgivemе ✦</a>
+  </div>
+
+  <div id="toast"></div>
+
+  <script type="module">
+    import { getStoryBySlug } from './lib/stories.js'
+
+    // ─── html2canvas CDN (lazy load only when download clicked) ───
+    let html2canvasLoaded = false
+    async function loadHtml2Canvas() {
+      if (html2canvasLoaded) return
+      await new Promise((res, rej) => {
+        const s = document.createElement('script')
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+        s.onload = res; s.onerror = rej
+        document.head.appendChild(s)
+      })
+      html2canvasLoaded = true
+    }
+
+    // ─── State ──────────────────────────────────────────────────
+    let storyData = null
+    const slug = window.location.pathname.split('/s/')[1]
+           ?? new URLSearchParams(window.location.search).get('slug')
+    const shareUrl = window.location.href
+
+    // ─── Load ───────────────────────────────────────────────────
+    async function load() {
+      if (!slug) {
+        document.getElementById('root').innerHTML = '<div class="loading">Story not found.</div>'
+        return
+      }
+      try {
+        storyData = await getStoryBySlug(slug)
+        render(storyData)
+        document.getElementById('actions').style.display = 'flex'
+      } catch {
+        document.getElementById('root').innerHTML = '<div class="loading">This story may have been removed.</div>'
+      }
+    }
+
+    // ─── Render ─────────────────────────────────────────────────
+    function render(story) {
+      const photos = (story.media_urls || [])
+        .filter(m => m.type === 'photo')
+        .map(m => `<img src="${m.url}" alt="" crossorigin="anonymous" />`)
+        .join('')
+
+      // update page title
+      document.title = `A letter for ${story.recipient_name || 'you'} — Forgivemе`
+
+      document.getElementById('root').innerHTML = `
+        <div class="eyebrow">A letter for</div>
+        <div class="name">${esc(story.recipient_name || 'Someone Special')}</div>
+        <div class="divider"></div>
+        <div class="body">${esc(story.message || '')}</div>
+        ${photos ? `<div class="photos">${photos}</div>` : ''}
+        <div class="from">— with love from</div>
+        <div class="from-name">${esc(story.sender_name || '')}</div>
+      `
+    }
+
+    function esc(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    }
+
+    // ─── Share ──────────────────────────────────────────────────
+    window.handleShare = async function() {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: storyData ? `A letter for ${storyData.recipient_name}` : 'A letter for you',
+            text: 'Someone wrote you something beautiful.',
+            url: shareUrl
+          })
+          return
+        } catch(e) { /* user cancelled — fall through */ }
+      }
+      await handleCopy()
+    }
+
+    // ─── Copy Link ──────────────────────────────────────────────
+    window.handleCopy = async function() {
+      try {
+        await navigator.clipboard.writeText(shareUrl)
+        showToast('✦ Link copied!')
+      } catch {
+        showToast('Copy failed — copy from address bar')
+      }
+    }
+
+    // ─── Download as Image ──────────────────────────────────────
+    window.handleDownload = async function() {
+      const btn = document.getElementById('btn-download')
+      const prog = document.getElementById('dl-progress')
+      btn.textContent = '⏳ Generating…'
+      btn.disabled = true
+      prog.style.display = 'block'
+
+      try {
+        await loadHtml2Canvas()
+        const card = document.getElementById('root')
+
+        const canvas = await html2canvas(card, {
+          backgroundColor: '#0d0505',
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          logging: false
+        })
+
+        const link = document.createElement('a')
+        const name = storyData?.recipient_name
+          ? `letter-for-${storyData.recipient_name.replace(/\s+/g,'-').toLowerCase()}`
+          : 'my-story'
+        link.download = `${name}.png`
+        link.href = canvas.toDataURL('image/png')
+        link.click()
+
+        showToast('✦ Image saved!')
+      } catch(err) {
+        showToast('Could not generate image — try screenshot')
+        console.error(err)
+      } finally {
+        btn.textContent = '↓ Save as Image'
+        btn.disabled = false
+        prog.style.display = 'none'
+      }
+    }
+
+    // ─── Toast ──────────────────────────────────────────────────
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('show')
+      setTimeout(() => t.classList.remove('show'), 3000)
+    }
+
+    load()
+  </script>
+</body>
+</html>

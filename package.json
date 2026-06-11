@@ -1,0 +1,38 @@
+{
+  "name": "forgiveme",
+  "version": "1.0.0",
+  "description": "Cinematic apology story platform",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "sync:android": "npm run build && npx cap sync android",
+    "sync:ios": "npm run build && npx cap sync ios",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "run:android": "npm run build && npx cap sync android && npx cap run android",
+    "run:ios": "npm run build && npx cap sync ios && npx cap run ios",
+    "bump": "bash scripts/bump-version.sh",
+    "functions:deploy": "supabase functions deploy send-notification && supabase functions deploy on-story-viewed && supabase functions deploy on-story-created",
+    "functions:logs": "supabase functions logs send-notification --tail"
+  },
+  "dependencies": {
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/browser": "^6.0.0",
+    "@capacitor/camera": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/filesystem": "^6.0.0",
+    "@capacitor/preferences": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0",
+    "@capacitor/share": "^6.0.0",
+    "@supabase/supabase-js": "^2.43.0",
+    "nanoid": "^5.0.7",
+    "razorpay": "^2.9.6"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.0.0",
+    "vite": "^5.2.0"
+  }
+}

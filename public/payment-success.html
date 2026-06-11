@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Returning to app…</title>
+  <script>
+    // Redirect immediately to the custom URL scheme so the app intercepts it.
+    // Stripe requires HTTPS success_url in live mode, so this intermediate
+    // page bridges the web and native worlds.
+    const params = new URLSearchParams(window.location.search)
+    const sessionId = params.get('session_id') || ''
+    window.location.href = 'forgiveme://payment?status=success&session_id=' + sessionId
+  </script>
+</head>
+<body style="background:#0d0808;color:#faf6f0;font-family:'Georgia',serif;
+  display:flex;align-items:center;justify-content:center;height:100vh;margin:0;
+  flex-direction:column;gap:1rem;text-align:center;">
+  <div style="width:32px;height:32px;border:1px solid rgba(212,168,92,.4);
+    border-top-color:#d4a85c;border-radius:50%;
+    animation:spin 1s linear infinite"></div>
+  <p style="letter-spacing:.3em;font-size:.75rem;opacity:.5;text-transform:uppercase">
+    Returning to app…
+  </p>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</body>
+</html>
