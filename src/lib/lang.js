@@ -10,6 +10,7 @@ const LANG = {
     nav_preview: 'Preview',
     nav_premium: 'Premium',
     nav_admin: 'Admin',
+    nav_cards: 'Cards',
 
     // Landing
     landing_eyebrow: '✦ Some words need more than a text ✦',
@@ -66,6 +67,24 @@ const LANG = {
     feature_early: 'Early access features',
     feature_notif: 'Priority notifications',
     feature_admin: 'Admin gifting access',
+
+    // Cards Section
+    cards_eyebrow: '✦ 100 Apology Cards ✦',
+    cards_title: 'Every Apology, Crafted.',
+    cards_sub: 'Use any card as your story starting point',
+    cards_lock_title: 'Premium Feature',
+    cards_lock_sub: '100 hand-crafted apology cards across every tone — exclusively for premium members.',
+    cards_unlock_btn: '✦ Unlock Premium',
+    cards_search_ph: 'Search cards…',
+    filter_all: 'All 100',
+    filter_tender: 'Tender',
+    filter_passionate: 'Passionate',
+    filter_remorseful: 'Remorseful',
+    filter_hopeful: 'Hopeful',
+    filter_poetic: 'Poetic',
+    filter_raw: 'Raw',
+    modal_use_btn: '✦ Use This Card',
+    modal_copy_btn: 'Copy Text',
   },
 
   hi: {
@@ -75,6 +94,7 @@ const LANG = {
     nav_preview: 'Dekho',
     nav_premium: 'Premium',
     nav_admin: 'Admin',
+    nav_cards: 'Cards',
 
     // Landing
     landing_eyebrow: '✦ Kuch baatein sirf text se nahi kahi jaatin ✦',
@@ -131,6 +151,24 @@ const LANG = {
     feature_early: 'Nayi features pehle',
     feature_notif: 'Priority notifications',
     feature_admin: 'Admin gifting access',
+
+    // Cards Section
+    cards_eyebrow: '✦ 100 Maafi Ke Cards ✦',
+    cards_title: 'Har Maafi, Dil Se Likhi.',
+    cards_sub: 'Koi bhi card apni kahani ki shuruaat banao',
+    cards_lock_title: 'Premium Feature',
+    cards_lock_sub: '100 khubsoorat maafi ke cards har andaaz mein — sirf premium members ke liye.',
+    cards_unlock_btn: '✦ Premium Unlock Karo',
+    cards_search_ph: 'Cards dhundo…',
+    filter_all: 'Sab 100',
+    filter_tender: 'Naram',
+    filter_passionate: 'Jazbaati',
+    filter_remorseful: 'Pachtawa',
+    filter_hopeful: 'Umeed',
+    filter_poetic: 'Shayarana',
+    filter_raw: 'Sachcha',
+    modal_use_btn: '✦ Yeh Card Use Karo',
+    modal_copy_btn: 'Text Copy Karo',
   }
 }
 
@@ -142,7 +180,7 @@ function applyLang(lang) {
   localStorage.setItem('lang', lang)
   const t = LANG[lang]
 
-  // Nav
+  // All data-t elements
   document.querySelectorAll('[data-t]').forEach(el => {
     const key = el.dataset.t
     if (t[key] !== undefined) el.innerHTML = t[key]
@@ -157,6 +195,41 @@ function applyLang(lang) {
     const key = el.dataset.ph
     if (t[key] !== undefined) el.placeholder = t[key]
   })
+
+  // Cards section static text
+  const eyebrow = document.querySelector('.cards-eyebrow')
+  if (eyebrow) eyebrow.textContent = t.cards_eyebrow
+  const cardsTitle = document.querySelector('.cards-title')
+  if (cardsTitle) cardsTitle.textContent = t.cards_title
+  const cardsSub = document.querySelector('.cards-sub')
+  if (cardsSub) cardsSub.textContent = t.cards_sub
+  const lockTitle = document.querySelector('.lock-title')
+  if (lockTitle) lockTitle.textContent = t.cards_lock_title
+  const lockSub = document.querySelector('.lock-sub')
+  if (lockSub) lockSub.textContent = t.cards_lock_sub
+  const unlockBtn = document.querySelector('#cards-lock .btn-unlock')
+  if (unlockBtn) unlockBtn.textContent = t.cards_unlock_btn
+  const searchInput = document.getElementById('cards-search-input')
+  if (searchInput) searchInput.placeholder = t.cards_search_ph
+
+  // Filter chips
+  const filterMap = { all: 'filter_all', tender: 'filter_tender', passionate: 'filter_passionate', remorseful: 'filter_remorseful', hopeful: 'filter_hopeful', poetic: 'filter_poetic', raw: 'filter_raw' }
+  document.querySelectorAll('#cards-filter .filter-chip').forEach(chip => {
+    const f = chip.dataset.filter
+    if (filterMap[f] && t[filterMap[f]]) chip.textContent = t[filterMap[f]]
+  })
+
+  // Modal buttons
+  const modalUseBtn = document.querySelector('.modal-use-btn')
+  if (modalUseBtn) modalUseBtn.textContent = t.modal_use_btn
+  const modalCopyBtn = document.querySelector('.modal-copy-btn')
+  if (modalCopyBtn) modalCopyBtn.textContent = t.modal_copy_btn
+
+  // Expose current lang for main.js to use
+  window.currentLang = lang
+
+  // Re-render cards if they are visible (so tone labels update)
+  if (typeof window.__renderCards === 'function') window.__renderCards()
 }
 
 window._toggleLang = function () {
