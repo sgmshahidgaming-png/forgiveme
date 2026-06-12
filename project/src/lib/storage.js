@@ -20,7 +20,6 @@ export async function pickAudio() {
 // ── Native photo picker via Capacitor Camera plugin ────────────────
 async function pickPhotoNative() {
   const { Camera, CameraResultType, CameraSource } = await import('@capacitor/camera')
-  const { Filesystem, Directory } = await import('@capacitor/filesystem')
 
   const photo = await Camera.getPhoto({
     quality: 85,
@@ -29,14 +28,15 @@ async function pickPhotoNative() {
     source: CameraSource.Photos
   })
 
-  const file = await Filesystem.readFile({
-    path: photo.path,
-    directory: Directory.Cache
-  })
-
+  // Use the webPath URL directly — no base64 conversion needed
+  const webUrl = photo.webPath || photo.path
   const mimeType = photo.format === 'png' ? 'image/png' : 'image/jpeg'
-  const blob = base64ToBlob(file.data, mimeType)
-  return { blob, ext: photo.format || 'jpeg', mimeType }
+  const ext = photo.format || 'jpeg'
+
+  const response = await fetch(webUrl)
+  const blob = await response.blob()
+
+  return { blob, ext, mimeType }
 }
 
 // ── Web / Capacitor WebView file picker ────────────────────────────
@@ -97,10 +97,3 @@ export async function pickAndUploadAudio(onProgress) {
   return { url, localUrl }
 }
 
-// ── Helper ─────────────────────────────────────────────────────────
-function base64ToBlob(base64, mimeType) {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  return new Blob([bytes], { type: mimeType })
-}

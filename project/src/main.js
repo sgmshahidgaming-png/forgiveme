@@ -133,6 +133,26 @@ function initSwipe() {
 }
 
 // ─── AI GENERATION ──────────────────────────────────────────────────
+// ─── OFFLINE FALLBACKS ────────────────────────────────────────────
+const AI_FALLBACKS = {
+  hi: {
+    tender: 'Tumse kuch kehna tha jo dil mein bahut gehra tha. Maafi chahta hoon un sab lamhon ke liye jab tumhe akela feel karaya. Tum mere liye bahut khaas ho aur yeh duri mujhse sahi nahi jaati.',
+    passionate: 'Main tumhe bhool nahi sakta. Har jagah tumhari yaad aati hai. Galat hua mujhse, poori tarah se. Main abhi bhi yahan hoon — agar tum sunna chahte ho.',
+    remorseful: 'Jo kiya woh galat tha. Koi bahana nahi, koi safai nahi. Sirf yeh ki maafi chahta hoon dil ki gehraai se. Tum deserve karte ho isse behtar.',
+    hopeful: 'Mujhe yakeen hai hum phir se theek ho sakte hain. Ek mauka do, main sabit kar dunga ki woh galti dobara nahi hogi. Tumhara intezaar karunga.',
+    poetic: 'Tumhara naam mere dil mein ek dard ki tarah rehta hai jo yaad dilaata hai kya khoya. Maafi chahta hoon, aur chahta hoon ki tum jaano — tum mere liye sab kuch ho.',
+    raw: 'Galat kiya. Jaanta hoon. Maafi chahta hoon. Bas itna. Lekin dil se.'
+  },
+  en: {
+    tender: "There's something I've been carrying — words meant for you that kept dissolving before I could speak them. I'm sorry for every moment my silence made you feel alone. You deserve better.",
+    passionate: "I can't stop thinking about what I did. You deserved better, and I know that now in a way that won't let me sleep. I'm still here, if you'll let me try again.",
+    remorseful: "I was wrong. No excuses, no context. Just: I hurt you, I knew it, and I'm deeply sorry. You deserved so much more than what I gave you.",
+    hopeful: "I believe we can find our way back. I'm sorry for the distance I created. I'm holding the door open, and I'll wait as long as you need.",
+    poetic: "Your name lives in me like a bruise I keep pressing — not to hurt, but to remember what I'm missing. I'm sorry, and I hope you know — you were never just a chapter.",
+    raw: "Messed up. Know it. Sorry. That's the whole thing. But I mean it with everything I have."
+  }
+}
+
 window.handleAIGenerate = async function handleAIGenerate() {
   if (isGeneratingAI) return
   isGeneratingAI = true
@@ -149,70 +169,113 @@ window.handleAIGenerate = async function handleAIGenerate() {
     btn.classList.add('generating')
   }
 
+  // ── Helper: typewriter effect ──
+  function typewriterEffect(text) {
+    const msgArea = document.getElementById('f-msg')
+    if (!msgArea) return
+    msgArea.value = ''
+    msgArea.disabled = false
+    let i = 0
+    const chars = text.split('')
+    function typeNext() {
+      if (i < chars.length) {
+        msgArea.value += chars[i++]
+        const cc = document.getElementById('char-count')
+        if (cc) cc.textContent = `${msgArea.value.length} chars`
+        msgArea.dispatchEvent(new Event('input'))
+        setTimeout(typeNext, Math.random() * 8 + 2)
+      }
+    }
+    typeNext()
+  }
+
+  // ── Check online status ──
+  const isOnline = navigator.onLine
+
+  if (!isOnline) {
+    // Offline → use curated fallback immediately
+    const story = AI_FALLBACKS[lang]?.[selectedTone] || AI_FALLBACKS['hi'].tender
+    typewriterEffect(story)
+    showToast(lang === 'hi' ? '✦ Offline mode — kahani ready hai' : '✦ Offline mode — story is ready')
+    isGeneratingAI = false
+    if (btn) {
+      btn.textContent = lang === 'hi' ? '✦ AI Se Likhwao' : '✦ AI Write For Me'
+      btn.disabled = false
+      btn.classList.remove('generating')
+    }
+    return
+  }
+
+  // ── Online → call Groq API directly ──
   try {
-    const res = await fetch('/api/ai-generate', {
+    const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || ''
+    if (!GROQ_KEY) throw new Error('No Groq key')
+
+    const toName = recipientName || (lang === 'hi' ? 'aap' : 'them')
+    const fromName = senderName || (lang === 'hi' ? 'main' : 'me')
+
+    const toneDescriptions = {
+      hi: {
+        tender: 'pyaar bhari, komal, dil se',
+        passionate: 'jazbaati, gehri, dard bhari',
+        remorseful: 'sachchi maafi wali, sharminda',
+        hopeful: 'umeed bhari, aage dekhne wali',
+        poetic: 'kavitaai, lafzon mein jazbaat',
+        raw: 'seedhi, sachchi, bina liptapoti'
+      },
+      en: {
+        tender: 'warm, gentle, heartfelt',
+        passionate: 'emotional, intense, deeply felt',
+        remorseful: 'genuinely remorseful, humble',
+        hopeful: 'hopeful, forward-looking',
+        poetic: 'poetic, lyrical, expressive',
+        raw: 'raw, direct, no fluff'
+      }
+    }
+
+    const toneDesc = toneDescriptions[lang]?.[selectedTone] || toneDescriptions['hi'].tender
+
+    const systemPrompt = lang === 'hi'
+      ? `Tu ek dil se likhne wala AI hai jo maafi aur pyaar ke personal messages likhta hai. Seedha message likh — koi prefix, koi "Dear", koi heading mat lagao. Sirf 80-120 words ka ek emotional paragraph likh. Tone: ${toneDesc}.`
+      : `You are an AI that writes heartfelt personal apology and love messages. Write the message directly — no prefix, no "Dear", no heading. Just one emotional paragraph of 80-120 words. Tone: ${toneDesc}.`
+
+    const userPrompt = lang === 'hi'
+      ? `${fromName} ki taraf se ${toName} ke liye ek ${toneDesc} tone mein personal message likh.${context ? ` Context: ${context}` : ''} Sirf message likh, kuch aur nahi.`
+      : `Write a personal message from ${fromName} to ${toName} in a ${toneDesc} tone.${context ? ` Context: ${context}` : ''} Write only the message, nothing else.`
+
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_KEY}`
+      },
       body: JSON.stringify({
-        recipientName: recipientName || (lang === 'hi' ? 'aap' : 'them'),
-        senderName: senderName || (lang === 'hi' ? 'main' : 'me'),
-        tone: selectedTone,
-        context,
-        lang
+        model: 'llama3-8b-8192',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        max_tokens: 200,
+        temperature: 0.85
       })
     })
 
-    const data = await res.json()
-    const story = data.message || data.fallback
+    if (!res.ok) throw new Error(`Groq error: ${res.status}`)
 
-    if (story) {
-      const msgArea = document.getElementById('f-msg')
-      if (msgArea) {
-        msgArea.value = ''
-        msgArea.disabled = false
-        // Typewriter effect
-        let i = 0
-        const chars = story.split('')
-        function typeNext() {
-          if (i < chars.length) {
-            msgArea.value += chars[i++]
-            const cc = document.getElementById('char-count')
-            if (cc) cc.textContent = `${msgArea.value.length} chars`
-            setTimeout(typeNext, Math.random() * 8 + 2)
-          }
-        }
-        typeNext()
-      }
-      showToast(lang === 'hi' ? '✦ AI ne aapki kahani likhi' : '✦ Your story has been written by AI')
-    } else {
-      throw new Error('Empty response')
-    }
+    const data = await res.json()
+    const story = data.choices?.[0]?.message?.content?.trim()
+
+    if (!story) throw new Error('Empty Groq response')
+
+    typewriterEffect(story)
+    showToast(lang === 'hi' ? '✦ AI ne aapki kahani likhi ✨' : '✦ Your story has been written by AI ✨')
+
   } catch (err) {
-    // Fallback to curated message
-    const msgArea = document.getElementById('f-msg')
-    if (msgArea) {
-      const fallbacks = {
-        hi: {
-          tender: 'Tumse kuch kehna tha jo dil mein bahut gehra tha. Maafi chahta hoon un sab lamhon ke liye jab tumhe akela feel karaya. Tum mere liye bahut khaas ho.',
-          passionate: 'Main tumhe bhool nahi sakta. Har jagah tumhari yaad aati hai. Galat hua mujhse, poori tarah se. Main abhi bhi yahan hoon.',
-          remorseful: 'Jo kiya woh galat tha. Koi bahana nahi, koi safai nahi. Sirf yeh ki maafi chahta hoon dil ki gehraai se.',
-          hopeful: 'Mujhe yakeen hai hum phir se theek ho sakte hain. Ek mauka do, main sabit kar dunga.',
-          poetic: 'Tumhara naam mere dil mein ek dard ki tarah rehta hai jo yaad dilaata hai kya khoya. Maafi chahta hoon.',
-          raw: 'Galat kiya. Jaanta hoon. Maafi chahta hoon. Bas itna.'
-        },
-        en: {
-          tender: "There's something I've been carrying — words meant for you that kept dissolving before I could speak them. I'm sorry for every moment my silence made you feel alone.",
-          passionate: "I can't stop thinking about what I did. You deserved better, and I know that now in a way that won't let me sleep.",
-          remorseful: "I was wrong. No excuses, no context. Just: I hurt you, I knew it, and I'm deeply sorry.",
-          hopeful: "I believe we can find our way back. I'm sorry for the distance I created. I'm holding the door open.",
-          poetic: "Your name lives in me like a bruise I keep pressing — not to hurt, but to remember what I'm missing. I'm sorry.",
-          raw: "Messed up. Know it. Sorry. That's the whole thing."
-        }
-      }
-      msgArea.value = fallbacks[lang]?.[selectedTone] || fallbacks['hi'].tender
-      msgArea.dispatchEvent(new Event('input'))
-    }
-    showToast(lang === 'hi' ? '✦ AI ne kahani likhi (offline mode)' : '✦ Story generated (offline mode)')
+    console.warn('Groq API failed, using fallback:', err.message)
+    // Fallback to curated story
+    const story = AI_FALLBACKS[lang]?.[selectedTone] || AI_FALLBACKS['hi'].tender
+    typewriterEffect(story)
+    showToast(lang === 'hi' ? '✦ Kahani ready hai ✦' : '✦ Story is ready ✦')
   } finally {
     isGeneratingAI = false
     if (btn) {
@@ -427,25 +490,38 @@ window.checkAdmin = function checkAdmin() {
     adminLoadRecentStories()
     adminLoadStats()
 
-    // Unlock counter display
+    // ── Subscription counter unlock ──
     try {
       const rd = document.getElementById('remaining-display')
-      if (rd) rd.textContent = '∞'
+      if (rd) rd.textContent = '\u221e'
       const uc = document.getElementById('use-count')
-      if (uc) uc.textContent = 'Admin — unlimited'
+      if (uc) uc.textContent = 'Admin \u2014 unlimited'
       const pb = document.getElementById('pbar-fill')
       if (pb) pb.style.width = '100%'
     } catch { }
 
-    // Unlock download button
+    // ── Download button unlock ──
     updateDownloadBtn(true)
 
-    // Unlock cards immediately
-    const lock = document.getElementById('cards-lock')
-    if (lock) lock.classList.add('hidden')
+    // ── Remove ALL paywall/lock overlays site-wide ──
+    document.querySelectorAll(
+      '#cards-lock, #gallery-lock, [id$="-lock"], .premium-lock, .paywall-overlay'
+    ).forEach(el => el.classList.add('hidden'))
+
+    // ── Unlock cards scene ──
     renderCardsForAdmin()
 
-    showToast('✦ Admin access — all features unlocked')
+    // ── Unlock plan/subscription scene buttons ──
+    document.querySelectorAll('.btn-unlock, .upgrade-btn, .paywall-btn').forEach(btn => {
+      btn.textContent = '\u2746 Unlocked'
+      btn.disabled = true
+    })
+
+    // ── Unlock AI generate button (if scene is active) ──
+    const createBtn = document.getElementById('create-btn')
+    if (createBtn) createBtn.disabled = false
+
+    showToast('\u2746 Admin access \u2014 subscription & all features unlocked')
   } else {
     showToast('Incorrect password')
   }
@@ -1049,11 +1125,18 @@ function renderGalleryGrid() {
     const card = document.createElement('div')
     card.className = 'gallery-polaroid'
     const bg = palettes[i % palettes.length]
+
+    // If there's a stored photo, show it as an image; otherwise show emoji
+    const imgContent = mem.photo
+      ? `<img src="${mem.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:2px" />`
+      : `<span style="font-size:3rem">${mem.emoji || '🌸'}</span>`
+
     card.innerHTML = `
       <div class="gallery-tape"></div>
-      <div class="gallery-polaroid-img" style="background:${bg};font-size:3rem">${mem.emoji || '🌸'}</div>
+      <div class="gallery-polaroid-img" style="background:${mem.photo ? '#000' : bg}">${imgContent}</div>
       <div class="gallery-polaroid-caption">${mem.caption || 'a moment to keep'}</div>
       <button class="gallery-delete-btn" onclick="deleteGalleryMemory(${i})" title="Remove">✕</button>
+      <button class="gallery-download-btn" onclick="downloadPolaroid(this, event)" title="Download">⬇</button>
     `
     grid.appendChild(card)
   })
@@ -1067,10 +1150,65 @@ window.deleteGalleryMemory = function (idx) {
   showToast('Memory removed')
 }
 
+// ─── DOWNLOAD POLAROID ─────────────────────────────────────────────
+window.downloadPolaroid = async function downloadPolaroid(btn, e) {
+  e.stopPropagation()
+  const card = btn.closest('.gallery-polaroid')
+  if (!card) return
+
+  // Hide action buttons during capture
+  const deleteBtns = card.querySelectorAll('.gallery-delete-btn, .gallery-download-btn')
+  deleteBtns.forEach(b => b.style.opacity = '0')
+
+  try {
+    // Load html2canvas dynamically if not already loaded
+    if (!window.html2canvas) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script')
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+        s.onload = resolve
+        s.onerror = reject
+        document.head.appendChild(s)
+      })
+    }
+
+    const canvas = await window.html2canvas(card, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false
+    })
+
+    const link = document.createElement('a')
+    const caption = card.querySelector('.gallery-polaroid-caption')?.textContent?.trim() || 'memory'
+    const filename = 'memory-' + caption.slice(0, 20).replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '-').toLowerCase() + '.png'
+    link.download = filename
+    link.href = canvas.toDataURL('image/png', 1.0)
+    link.click()
+    showToast('✦ Memory downloaded!')
+  } catch (err) {
+    console.error('Download failed:', err)
+    showToast('Download failed — try again')
+  } finally {
+    deleteBtns.forEach(b => b.style.opacity = '')
+  }
+}
+
 window.openGalleryAdd = function () {
   const backdrop = document.getElementById('gallery-modal-backdrop')
   if (!backdrop) return
   document.getElementById('gallery-caption-input').value = ''
+  // Reset photo preview
+  window._galleryPendingPhoto = null
+  const img = document.getElementById('gallery-photo-preview-img')
+  const placeholder = document.getElementById('gallery-photo-placeholder')
+  const removeBtn = document.getElementById('gallery-photo-remove-btn')
+  if (img) { img.src = ''; img.style.display = 'none' }
+  if (placeholder) placeholder.style.display = ''
+  if (removeBtn) removeBtn.style.display = 'none'
+  const fileInput = document.getElementById('gallery-photo-input')
+  if (fileInput) fileInput.value = ''
   backdrop.classList.remove('hidden')
 }
 
@@ -1087,11 +1225,13 @@ window.closeGalleryModalDirect = function () {
 window.saveGalleryMemory = function () {
   const caption = document.getElementById('gallery-caption-input')?.value?.trim()
   const emoji = document.getElementById('gallery-emoji-input')?.value || '🌸'
+  const photoData = window._galleryPendingPhoto || null
   if (!caption) { showToast('Please add a caption!'); return }
 
   const arr = loadGalleryMemories()
-  arr.unshift({ caption, emoji, ts: Date.now() })
+  arr.unshift({ caption, emoji, photo: photoData, ts: Date.now() })
   saveGalleryMemories(arr)
+  window._galleryPendingPhoto = null
   document.getElementById('gallery-modal-backdrop').classList.add('hidden')
   renderGalleryGrid()
   showToast('✦ Memory pinned!')
