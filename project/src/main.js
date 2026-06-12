@@ -122,12 +122,12 @@ function initSwipe() {
     const dx = e.changedTouches[0].clientX - startX
     const dy = e.changedTouches[0].clientY - startY
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
-      if (dx < 0 && currentScene < 5) goScene(currentScene + 1)
+      if (dx < 0 && currentScene < 6) goScene(currentScene + 1)
       if (dx > 0 && currentScene > 0) goScene(currentScene - 1)
     }
   })
   document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' && currentScene < 5) goScene(currentScene + 1)
+    if (e.key === 'ArrowRight' && currentScene < 6) goScene(currentScene + 1)
     if (e.key === 'ArrowLeft' && currentScene > 0) goScene(currentScene - 1)
   })
 }
@@ -232,26 +232,27 @@ window.handleChipUpload = async function handleChipUpload(type) {
   chip.disabled = true
 
   try {
-    let url
+    let url, localUrl
     if (type === 'photo') {
-      url = await pickAndUploadPhoto(stage => {
+      ;({ url, localUrl } = await pickAndUploadPhoto(stage => {
         chip.textContent = stage === 'picking' ? '📷 Selecting…' : '☁️ Uploading…'
-      })
+      }))
     } else {
-      url = await pickAndUploadAudio(stage => {
+      ;({ url, localUrl } = await pickAndUploadAudio(stage => {
         chip.textContent = stage === 'picking' ? '🎵 Selecting…' : '☁️ Uploading…'
-      })
+      }))
     }
 
-    uploadedMediaUrls.push({ type, url })
+    // localUrl = blob URL (works immediately), url = Supabase URL (for sharing)
+    uploadedMediaUrls.push({ type, url, localUrl })
     chip.textContent = `✓ ${type.charAt(0).toUpperCase() + type.slice(1)} added`
     chip.style.borderColor = 'rgba(212,168,92,.4)'
     chip.style.color = 'var(--gold)'
 
     if (type === 'photo') {
       const img = document.createElement('img')
-      img.src = url
-      img.style.cssText = 'width:100%;border-radius:12px;margin-top:10px;max-height:200px;object-fit:cover'
+      img.src = localUrl   // blob URL for instant display
+      img.style.cssText = 'width:100%;height:220px;border-radius:12px;margin-top:10px;object-fit:cover;object-position:center;display:block'
       document.getElementById('memory-tape').appendChild(img)
     }
 
@@ -259,7 +260,7 @@ window.handleChipUpload = async function handleChipUpload(type) {
       const wrap = document.createElement('div')
       wrap.className = 'audio-player-chip'
       wrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid rgba(212,168,92,.3)'
-      wrap.innerHTML = `<span style="font-size:1rem">${type === 'music' ? '🎵' : '🎙'}</span><audio controls src="${url}" style="height:28px;flex:1;accent-color:var(--gold)"></audio>`
+      wrap.innerHTML = `<span style="font-size:1rem">${type === 'music' ? '🎵' : '🎙'}</span><audio controls src="${localUrl}" style="height:28px;flex:1;accent-color:var(--gold)"></audio>`
       document.getElementById('memory-tape').appendChild(wrap)
     }
 
@@ -290,18 +291,14 @@ window.handleCreate = async function handleCreate() {
     const result = await createStoryFlow({
       recipientName, senderName, message,
       tone: selectedTone,
-      mediaUrls: uploadedMediaUrls
+      mediaUrls: uploadedMediaUrls,
+      adminBypass: !!window._adminUnlocked
     })
 
     if (!result.success && result.reason === 'limit_reached') {
-      // Admin ko limit nahi lagti
-      if (window._adminUnlocked) {
-        // ignore limit, continue below
-      } else {
-        goScene(3)
-        showToast('✦ Your free stories are used — upgrade to continue')
-        return
-      }
+      goScene(3)
+      showToast('✦ Your free stories are used — upgrade to continue')
+      return
     }
 
     document.getElementById('prev-to').textContent = recipientName
@@ -313,16 +310,18 @@ window.handleCreate = async function handleCreate() {
     // Media preview in story card
     const tape = document.getElementById('memory-tape')
     tape.innerHTML = ''
-    uploadedMediaUrls.forEach(({ type, url }) => {
+    uploadedMediaUrls.forEach(({ type, url, localUrl }) => {
+      // localUrl = blob URL for immediate playback, url = supabase URL
+      const playUrl = localUrl || url
       if (type === 'photo') {
         const img = document.createElement('img')
-        img.src = url
-        img.style.cssText = 'width:100%;border-radius:12px;margin-top:10px;max-height:220px;object-fit:cover'
+        img.src = playUrl
+        img.style.cssText = 'width:100%;height:220px;border-radius:12px;margin-top:10px;object-fit:cover;object-position:center;display:block'
         tape.appendChild(img)
       } else if (type === 'music' || type === 'voice') {
         const wrap = document.createElement('div')
         wrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid rgba(212,168,92,.3)'
-        wrap.innerHTML = `<span style="font-size:1.1rem">${type === 'music' ? '🎵' : '🎙'}</span><audio controls src="${url}" style="height:32px;flex:1;accent-color:var(--gold)"></audio>`
+        wrap.innerHTML = `<span style="font-size:1.1rem">${type === 'music' ? '🎵' : '🎙'}</span><audio controls src="${playUrl}" style="height:32px;flex:1;accent-color:var(--gold)"></audio>`
         tape.appendChild(wrap)
       }
     })
@@ -685,11 +684,14 @@ function initCanvas() {
 // ─── DOWNLOAD STORY ─────────────────────────────────────────────────
 window.handleDownload = async function handleDownload() {
   try {
-    const profile = await getProfile()
-    if (!profile?.is_premium) {
-      goScene(3)
-      showToast('✦ Download is a premium feature — upgrade to unlock')
-      return
+    // Admin ko premium check se bypass karo
+    if (!window._adminUnlocked) {
+      const profile = await getProfile()
+      if (!profile?.is_premium) {
+        goScene(3)
+        showToast('✦ Download is a premium feature — upgrade to unlock')
+        return
+      }
     }
 
     const to = document.getElementById('prev-to').textContent
@@ -910,6 +912,8 @@ function renderCards() {
 }
 
 window.filterCards = function () { renderCards() }
+// Expose for lang.js to call on language switch
+window.__renderCards = renderCards
 
 window.setCardFilter = function (filter) {
   activeFilter = filter
@@ -952,9 +956,12 @@ window.closeCardModalDirect = function () {
 // ── Use card → fill create form ───────────────────────────────────
 window.useCardInCreate = function () {
   if (!activeCard) return
+  const lang = window.currentLang || 'en'
   const msgArea = document.getElementById('f-msg')
   if (msgArea) {
-    msgArea.value = activeCard.body
+    // Use Hindi body if lang is hi and card has Hindi body
+    const body = (lang === 'hi' && activeCard.body_hi) ? activeCard.body_hi : activeCard.body
+    msgArea.value = body
     // trigger char counter
     msgArea.dispatchEvent(new Event('input'))
   }
@@ -967,14 +974,17 @@ window.useCardInCreate = function () {
   }
   closeCardModalDirect()
   goScene(1)
-  showToast(`✦ Card "${activeCard.title}" loaded — customize it!`)
+  const cardTitle = (lang === 'hi' && activeCard.title_hi) ? activeCard.title_hi : activeCard.title
+  showToast(`✦ Card "${cardTitle}" loaded — customize it!`)
 }
 
 // ── Copy card text ────────────────────────────────────────────────
 window.copyCardText = async function () {
   if (!activeCard) return
   try {
-    await navigator.clipboard.writeText(activeCard.body)
+    const lang = window.currentLang || 'en'
+    const body = (lang === 'hi' && activeCard.body_hi) ? activeCard.body_hi : activeCard.body
+    await navigator.clipboard.writeText(body)
     showToast('✦ Card text copied to clipboard')
   } catch {
     showToast('Copy failed — select text manually')
@@ -986,4 +996,103 @@ const _origGoScene = window.goScene
 window.goScene = function (idx) {
   _origGoScene(idx)
   if (idx === 5) setTimeout(initCardsScene, 400)
+  if (idx === 6) setTimeout(initGalleryScene, 400)
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GALLERY SCENE (s6) — Polaroid Memory Board
+// ══════════════════════════════════════════════════════════════════
+
+const GALLERY_KEY = 'gallery_memories_v1'
+
+function loadGalleryMemories() {
+  try { return JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]') } catch { return [] }
+}
+
+function saveGalleryMemories(arr) {
+  try { localStorage.setItem(GALLERY_KEY, JSON.stringify(arr)) } catch {}
+}
+
+async function initGalleryScene() {
+  let isPremium = false
+  try {
+    const profile = await getProfile()
+    isPremium = profile?.is_premium ?? false
+  } catch { isPremium = false }
+  if (window._adminUnlocked) isPremium = true
+
+  const lock = document.getElementById('gallery-lock')
+  if (lock) lock.classList.toggle('hidden', isPremium)
+
+  renderGalleryGrid()
+}
+
+function renderGalleryGrid() {
+  const grid = document.getElementById('gallery-grid')
+  if (!grid) return
+  const memories = loadGalleryMemories()
+  const empty = document.getElementById('gallery-empty')
+
+  // Remove old polaroids (keep empty state node)
+  grid.querySelectorAll('.gallery-polaroid').forEach(el => el.remove())
+
+  if (memories.length === 0) {
+    if (empty) empty.style.display = ''
+    return
+  }
+  if (empty) empty.style.display = 'none'
+
+  // Predefined warm background colours for the image placeholder
+  const palettes = ['#f7d6b0','#d0e8f2','#f2d0e8','#d0f2e0','#f2ebd0','#e0d0f2','#f2d0d0']
+
+  memories.forEach((mem, i) => {
+    const card = document.createElement('div')
+    card.className = 'gallery-polaroid'
+    const bg = palettes[i % palettes.length]
+    card.innerHTML = `
+      <div class="gallery-tape"></div>
+      <div class="gallery-polaroid-img" style="background:${bg};font-size:3rem">${mem.emoji || '🌸'}</div>
+      <div class="gallery-polaroid-caption">${mem.caption || 'a moment to keep'}</div>
+      <button class="gallery-delete-btn" onclick="deleteGalleryMemory(${i})" title="Remove">✕</button>
+    `
+    grid.appendChild(card)
+  })
+}
+
+window.deleteGalleryMemory = function (idx) {
+  const arr = loadGalleryMemories()
+  arr.splice(idx, 1)
+  saveGalleryMemories(arr)
+  renderGalleryGrid()
+  showToast('Memory removed')
+}
+
+window.openGalleryAdd = function () {
+  const backdrop = document.getElementById('gallery-modal-backdrop')
+  if (!backdrop) return
+  document.getElementById('gallery-caption-input').value = ''
+  backdrop.classList.remove('hidden')
+}
+
+window.closeGalleryModal = function (e) {
+  if (e.target === document.getElementById('gallery-modal-backdrop')) {
+    document.getElementById('gallery-modal-backdrop').classList.add('hidden')
+  }
+}
+
+window.closeGalleryModalDirect = function () {
+  document.getElementById('gallery-modal-backdrop').classList.add('hidden')
+}
+
+window.saveGalleryMemory = function () {
+  const caption = document.getElementById('gallery-caption-input')?.value?.trim()
+  const emoji = document.getElementById('gallery-emoji-input')?.value || '🌸'
+  if (!caption) { showToast('Please add a caption!'); return }
+
+  const arr = loadGalleryMemories()
+  arr.unshift({ caption, emoji, ts: Date.now() })
+  saveGalleryMemories(arr)
+  document.getElementById('gallery-modal-backdrop').classList.add('hidden')
+  renderGalleryGrid()
+  showToast('✦ Memory pinned!')
 }

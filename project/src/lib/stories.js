@@ -5,12 +5,14 @@ import { ensureSession } from './auth.js'
 const FREE_LIMIT = 3
 
 // ── Create a story ─────────────────────────────────────────────────
-export async function createStoryFlow({ recipientName, senderName, message, tone, mediaUrls = [] }) {
+export async function createStoryFlow({ recipientName, senderName, message, tone, mediaUrls = [], adminBypass = false }) {
   await ensureSession()
 
-  // Server-side free use check
-  const canCreate = await checkAndConsumeUse()
-  if (!canCreate) return { success: false, reason: 'limit_reached' }
+  // Admin bypass — limit check skip karo
+  if (!adminBypass) {
+    const canCreate = await checkAndConsumeUse()
+    if (!canCreate) return { success: false, reason: 'limit_reached' }
+  }
 
   const slug = nanoid(6)
 
@@ -97,7 +99,6 @@ async function checkAndConsumeUse() {
     .single()
 
   if (error || !profile) {
-    // Profile doesn't exist yet — create it
     await supabase.from('profiles').insert({ free_uses_count: 0, is_premium: false })
     return true
   }
@@ -105,7 +106,6 @@ async function checkAndConsumeUse() {
   if (profile.is_premium) return true
   if (profile.free_uses_count >= FREE_LIMIT) return false
 
-  // Atomic increment via Postgres RPC (prevents race conditions)
   await supabase.rpc('increment_free_uses')
   return true
 }

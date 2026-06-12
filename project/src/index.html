@@ -2281,6 +2281,240 @@
     .sealed-small-btn:hover {
       background: rgba(255, 200, 210, 0.9);
     }
+
+    /* ─── GALLERY SCENE (s6) ─────────────────────────────────── */
+    #s6 {
+      background: #f5ede0;
+      overflow-y: auto;
+    }
+
+    .gallery-header {
+      text-align: center;
+      padding: 3rem 1.5rem 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .gallery-eyebrow {
+      font-size: .65rem;
+      letter-spacing: .25em;
+      font-weight: 700;
+      color: #b07050;
+      margin-bottom: .6rem;
+      text-transform: uppercase;
+    }
+
+    .gallery-title {
+      font-size: clamp(1.6rem, 7vw, 2.8rem);
+      font-weight: 900;
+      color: #2a1a10;
+      line-height: 1.1;
+      margin-bottom: .5rem;
+    }
+
+    .gallery-sub {
+      font-size: .85rem;
+      color: rgba(80, 50, 30, 0.6);
+    }
+
+    .gallery-wrap {
+      position: relative;
+      padding: 0 1rem 7rem;
+      flex: 1;
+    }
+
+    /* Lock overlay */
+    .gallery-lock-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: linear-gradient(160deg, rgba(245, 230, 210, 0.97), rgba(230, 210, 190, 0.98));
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .75rem;
+      padding: 2rem;
+      text-align: center;
+      backdrop-filter: blur(12px);
+    }
+
+    .gallery-lock-overlay.hidden { display: none; }
+
+    .gallery-lock-overlay .lock-icon { font-size: 2.5rem; }
+    .gallery-lock-overlay .lock-title { font-size: 1.2rem; font-weight: 800; color: #2a1a10; }
+    .gallery-lock-overlay .lock-sub { font-size: .85rem; color: rgba(80,50,30,.7); max-width: 260px; }
+
+    /* Polaroid grid */
+    .gallery-polaroid-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1rem;
+      padding-top: .5rem;
+    }
+
+    /* Each polaroid card */
+    .gallery-polaroid {
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.13), 0 1px 4px rgba(0,0,0,.08);
+      padding: 10px 10px 28px;
+      position: relative;
+      transform: rotate(var(--tilt, -1.5deg));
+      transition: transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s;
+      cursor: pointer;
+    }
+
+    .gallery-polaroid:nth-child(even) {
+      --tilt: 1.8deg;
+      margin-top: 18px;
+    }
+
+    .gallery-polaroid:hover {
+      transform: rotate(0deg) scale(1.04);
+      box-shadow: 0 12px 40px rgba(0,0,0,.2);
+      z-index: 5;
+    }
+
+    /* Tape strip on top of each polaroid */
+    .gallery-tape {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 18px;
+      background: rgba(180, 160, 255, 0.55);
+      border-radius: 3px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    }
+
+    .gallery-polaroid-img {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #e8e0d0;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .gallery-polaroid-caption {
+      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+      font-size: .72rem;
+      color: #3a2a1a;
+      text-align: center;
+      line-height: 1.35;
+      padding: 0 4px;
+    }
+
+    /* Delete button (small x on top-right) */
+    .gallery-delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 20px;
+      height: 20px;
+      background: rgba(200,80,80,.75);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: .6rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .gallery-polaroid:hover .gallery-delete-btn { opacity: 1; }
+
+    /* Empty state */
+    .gallery-empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: rgba(80,50,30,.5);
+    }
+
+    .gallery-empty-icon { font-size: 2.5rem; margin-bottom: .5rem; }
+    .gallery-empty-text { font-size: .85rem; line-height: 1.6; }
+
+    /* Add memory button */
+    .gallery-add-btn {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFFC00;
+      color: #000;
+      font-weight: 800;
+      font-size: .75rem;
+      letter-spacing: .12em;
+      border: none;
+      border-radius: 100px;
+      padding: 12px 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(255,252,0,.4);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .gallery-add-btn:hover {
+      transform: translateX(-50%) scale(1.04);
+      box-shadow: 0 8px 30px rgba(255,252,0,.55);
+    }
+
+    /* Gallery modal */
+    .gallery-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .gallery-modal-backdrop.hidden { display: none; }
+
+    .gallery-modal {
+      background: #fff8f2;
+      border-radius: 28px 28px 0 0;
+      padding: 2rem 1.5rem 3rem;
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+    }
+
+    .gallery-modal-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #2a1a10;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    /* Warm nav variant when on gallery scene */
+    nav.gallery-nav {
+      background: rgba(245, 235, 220, 0.95) !important;
+      border: 1px solid rgba(180, 140, 100, 0.25) !important;
+    }
+
+    nav.gallery-nav button { color: rgba(80, 50, 30, 0.55) !important; }
+    nav.gallery-nav button.active,
+    nav.gallery-nav button:hover {
+      background: #b07050 !important;
+      color: #fff !important;
+    }
   </style>
 </head>
 
@@ -2307,6 +2541,7 @@
     <button onclick="goScene(2)" data-t="nav_preview">Preview</button>
     <button onclick="goScene(3)" data-t="nav_premium">Premium</button>
     <button onclick="goScene(5)" data-t="nav_cards">Cards</button>
+    <button onclick="goScene(6)" data-t="nav_gallery">Gallery</button>
     <button onclick="goScene(4)" data-t="nav_admin">Admin</button>
   </nav>
 
@@ -2600,6 +2835,60 @@
     </div>
   </section>
 
+  <!-- ══ SCENE 6: GALLERY ══ -->
+  <section class="scene hidden" id="s6">
+    <div class="gallery-header">
+      <div class="gallery-eyebrow">✦ Memory Gallery ✦</div>
+      <h2 class="gallery-title">Moments Worth Keeping.</h2>
+      <p class="gallery-sub">Your favourite feelings, pinned forever</p>
+    </div>
+
+    <div class="gallery-wrap" id="gallery-wrap">
+      <!-- Premium lock overlay -->
+      <div class="gallery-lock-overlay" id="gallery-lock">
+        <div class="lock-icon">📸</div>
+        <div class="lock-title">Premium Feature</div>
+        <p class="lock-sub">Save your favourite story moments as polaroid memories — exclusively for premium members.</p>
+        <button class="btn-unlock" onclick="goScene(3)" style="max-width:220px;margin-top:.5rem">
+          ✦ Unlock Premium
+        </button>
+      </div>
+
+      <!-- Gallery grid -->
+      <div class="gallery-polaroid-grid" id="gallery-grid">
+        <div class="gallery-empty-state" id="gallery-empty">
+          <div class="gallery-empty-icon">🌸</div>
+          <div class="gallery-empty-text">Your gallery is empty.<br>Save moments from your stories!</div>
+        </div>
+      </div>
+
+      <!-- Add new memory button -->
+      <button class="gallery-add-btn" id="gallery-add-btn" onclick="openGalleryAdd()">
+        <span>＋</span> Pin a Memory
+      </button>
+    </div>
+  </section>
+
+  <!-- ══ GALLERY ADD MODAL ══ -->
+  <div class="gallery-modal-backdrop hidden" id="gallery-modal-backdrop" onclick="closeGalleryModal(event)">
+    <div class="gallery-modal" id="gallery-modal">
+      <button class="modal-close" onclick="closeGalleryModalDirect()">✕</button>
+      <div class="gallery-modal-title">📸 Add Memory</div>
+      <input type="text" id="gallery-caption-input" class="field-input" placeholder="e.g. slow mornings &amp; soft mugs" maxlength="60" style="margin-bottom:12px;width:100%" />
+      <select id="gallery-emoji-input" class="field-input" style="margin-bottom:16px;width:100%;background:#222;color:#fff">
+        <option value="🐱">🐱 Cats</option>
+        <option value="🌸">🌸 Blossom</option>
+        <option value="✨">✨ Stars</option>
+        <option value="💕">💕 Love</option>
+        <option value="🌅">🌅 Sunset</option>
+        <option value="🌧️">🌧️ Rain</option>
+        <option value="☕">☕ Coffee</option>
+        <option value="🎑">🎑 Garden</option>
+      </select>
+      <button class="btn-primary" style="width:100%;padding:14px" onclick="saveGalleryMemory()">Save Memory ✦</button>
+    </div>
+  </div>
+
   <!-- ══ CARD MODAL ══ -->
   <div class="card-modal-backdrop" id="card-modal-backdrop" onclick="closeCardModal(event)">
     <div class="card-modal" id="card-modal">
@@ -2640,6 +2929,10 @@
     function closeCardModalDirect() { window.closeCardModalDirect?.() }
     function useCardInCreate() { window.useCardInCreate?.() }
     function copyCardText() { window.copyCardText?.() }
+    function openGalleryAdd() { window.openGalleryAdd?.() }
+    function closeGalleryModal(e) { window.closeGalleryModal?.(e) }
+    function closeGalleryModalDirect() { window.closeGalleryModalDirect?.() }
+    function saveGalleryMemory() { window.saveGalleryMemory?.() }
   </script>
   <script type="module" src="./main.js"></script>
   <!-- INJECTED: Pink Hearts + Media Fix Scripts -->
@@ -2696,6 +2989,8 @@
           window.__goScene = function (idx) {
             if (idx === 5) window.__startHearts();
             else window.__stopHearts();
+            if (idx === 6) document.querySelector('nav').classList.add('gallery-nav');
+            else document.querySelector('nav').classList.remove('gallery-nav');
             return realGo(idx);
           };
         }

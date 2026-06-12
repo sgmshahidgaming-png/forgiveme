@@ -78,19 +78,23 @@ export async function uploadToSupabase(blob, ext, type = 'photo') {
 export async function pickAndUploadPhoto(onProgress) {
   onProgress?.('picking')
   const { blob, ext } = await pickPhoto()
+  // Create local blob URL for immediate preview (works without network)
+  const localUrl = URL.createObjectURL(blob)
   onProgress?.('uploading')
   const url = await uploadToSupabase(blob, ext, 'photo')
   onProgress?.('done')
-  return url
+  return { url, localUrl }
 }
 
 export async function pickAndUploadAudio(onProgress) {
   onProgress?.('picking')
   const { blob, ext } = await pickAudio()
+  // Create local blob URL so audio plays immediately after story creation
+  const localUrl = URL.createObjectURL(blob)
   onProgress?.('uploading')
   const url = await uploadToSupabase(blob, ext, 'audio')
   onProgress?.('done')
-  return url
+  return { url, localUrl }
 }
 
 // ── Helper ─────────────────────────────────────────────────────────
