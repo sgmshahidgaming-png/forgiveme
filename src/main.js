@@ -141,85 +141,89 @@ window.handleAIGenerate = async function handleAIGenerate() {
   const recipientName = document.getElementById('f-to').value.trim()
   const senderName = document.getElementById('f-from').value.trim()
   const context = document.getElementById('f-context')?.value?.trim() || ''
-  const msgArea = document.getElementById('f-msg')
-  const lang = window.currentLang || 'en'
+  const lang = window.currentLang || localStorage.getItem('lang') || 'hi'
 
   if (btn) {
-    btn.textContent = '✦ AI is writing…'
+    btn.textContent = lang === 'hi' ? '✦ AI likh raha hai…' : '✦ AI is writing…'
     btn.disabled = true
     btn.classList.add('generating')
   }
 
   try {
-    // Unique seed har baar alag story ke liye
-    const randomSeed = Math.random().toString(36).slice(2, 8)
-
-    const toneDescriptions = {
-      tender: 'soft, gentle, quietly emotional',
-      passionate: 'intense, burning, deeply emotional',
-      remorseful: 'deeply sorry, taking full accountability, no excuses',
-      hopeful: 'forward-looking, believing in repair and a better future',
-      poetic: 'lyrical, metaphorical, beautifully crafted',
-      raw: 'blunt, honest, no decoration — just truth'
-    }
-
-    const isHindi = lang === 'hi'
-    const langInstruction = isHindi
-      ? 'Write the story in Roman Hindi (Hindi words written in English letters, like "Maafi chahta hoon", "Tumse pyaar hai"). Do NOT use Devanagari script.'
-      : 'Write in English.'
-
-    const contextLine = context
-      ? `The specific situation or topic to address: "${context}"`
-      : 'Write a general heartfelt apology.'
-
-    const prompt = `You are writing a unique, cinematic apology story. Seed: ${randomSeed}
-
-To: ${recipientName || 'them'}
-From: ${senderName || 'me'}
-Tone: ${selectedTone} (${toneDescriptions[selectedTone] || selectedTone})
-${contextLine}
-
-Rules:
-- Length: 80–140 words
-- MUST be unique — different opening, metaphor, and ending every time
-- MUST directly address the specific topic/context if provided
-- Do NOT start with "I" — use a creative opening
-- No generic lines — make it feel personal and specific
-- ${langInstruction}
-- Output ONLY the story text, nothing else`
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('/api/ai-generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }]
+        recipientName: recipientName || (lang === 'hi' ? 'aap' : 'them'),
+        senderName: senderName || (lang === 'hi' ? 'main' : 'me'),
+        tone: selectedTone,
+        context,
+        lang
       })
     })
 
-    const data = await response.json()
-    const story = data?.content?.[0]?.text?.trim()
+    const data = await res.json()
+    const story = data.message || data.fallback
 
-    if (story && msgArea) {
-      msgArea.value = story
-      msgArea.dispatchEvent(new Event('input'))
-      showToast('✦ Your story has been written by AI')
+    if (story) {
+      const msgArea = document.getElementById('f-msg')
+      if (msgArea) {
+        msgArea.value = ''
+        msgArea.disabled = false
+        // Typewriter effect
+        let i = 0
+        const chars = story.split('')
+        function typeNext() {
+          if (i < chars.length) {
+            msgArea.value += chars[i++]
+            const cc = document.getElementById('char-count')
+            if (cc) cc.textContent = `${msgArea.value.length} chars`
+            setTimeout(typeNext, Math.random() * 8 + 2)
+          }
+        }
+        typeNext()
+      }
+      showToast(lang === 'hi' ? '✦ AI ne aapki kahani likhi' : '✦ Your story has been written by AI')
     } else {
       throw new Error('Empty response')
     }
   } catch (err) {
-    showToast('AI generation failed — please write manually')
-    console.error(err)
+    // Fallback to curated message
+    const msgArea = document.getElementById('f-msg')
+    if (msgArea) {
+      const fallbacks = {
+        hi: {
+          tender: 'Tumse kuch kehna tha jo dil mein bahut gehra tha. Maafi chahta hoon un sab lamhon ke liye jab tumhe akela feel karaya. Tum mere liye bahut khaas ho.',
+          passionate: 'Main tumhe bhool nahi sakta. Har jagah tumhari yaad aati hai. Galat hua mujhse, poori tarah se. Main abhi bhi yahan hoon.',
+          remorseful: 'Jo kiya woh galat tha. Koi bahana nahi, koi safai nahi. Sirf yeh ki maafi chahta hoon dil ki gehraai se.',
+          hopeful: 'Mujhe yakeen hai hum phir se theek ho sakte hain. Ek mauka do, main sabit kar dunga.',
+          poetic: 'Tumhara naam mere dil mein ek dard ki tarah rehta hai jo yaad dilaata hai kya khoya. Maafi chahta hoon.',
+          raw: 'Galat kiya. Jaanta hoon. Maafi chahta hoon. Bas itna.'
+        },
+        en: {
+          tender: "There's something I've been carrying — words meant for you that kept dissolving before I could speak them. I'm sorry for every moment my silence made you feel alone.",
+          passionate: "I can't stop thinking about what I did. You deserved better, and I know that now in a way that won't let me sleep.",
+          remorseful: "I was wrong. No excuses, no context. Just: I hurt you, I knew it, and I'm deeply sorry.",
+          hopeful: "I believe we can find our way back. I'm sorry for the distance I created. I'm holding the door open.",
+          poetic: "Your name lives in me like a bruise I keep pressing — not to hurt, but to remember what I'm missing. I'm sorry.",
+          raw: "Messed up. Know it. Sorry. That's the whole thing."
+        }
+      }
+      msgArea.value = fallbacks[lang]?.[selectedTone] || fallbacks['hi'].tender
+      msgArea.dispatchEvent(new Event('input'))
+    }
+    showToast(lang === 'hi' ? '✦ AI ne kahani likhi (offline mode)' : '✦ Story generated (offline mode)')
   } finally {
     isGeneratingAI = false
     if (btn) {
-      btn.textContent = '✦ AI Write For Me'
+      btn.textContent = lang === 'hi' ? '✦ AI Se Likhwao' : '✦ AI Write For Me'
       btn.disabled = false
       btn.classList.remove('generating')
     }
   }
 }
+
+
 
 // ─── CHIP UPLOAD ───────────────────────────────────────────────────
 window.handleChipUpload = async function handleChipUpload(type) {
@@ -247,7 +251,16 @@ window.handleChipUpload = async function handleChipUpload(type) {
     if (type === 'photo') {
       const img = document.createElement('img')
       img.src = url
+      img.style.cssText = 'width:100%;border-radius:12px;margin-top:10px;max-height:200px;object-fit:cover'
       document.getElementById('memory-tape').appendChild(img)
+    }
+
+    if (type === 'music' || type === 'voice') {
+      const wrap = document.createElement('div')
+      wrap.className = 'audio-player-chip'
+      wrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid rgba(212,168,92,.3)'
+      wrap.innerHTML = `<span style="font-size:1rem">${type === 'music' ? '🎵' : '🎙'}</span><audio controls src="${url}" style="height:28px;flex:1;accent-color:var(--gold)"></audio>`
+      document.getElementById('memory-tape').appendChild(wrap)
     }
 
     showToast(`✦ ${type} uploaded successfully`)
@@ -296,6 +309,23 @@ window.handleCreate = async function handleCreate() {
     document.getElementById('prev-body').textContent = message
     document.getElementById('share-link').textContent = result.shareUrl
     currentShareUrl = result.shareUrl
+
+    // Media preview in story card
+    const tape = document.getElementById('memory-tape')
+    tape.innerHTML = ''
+    uploadedMediaUrls.forEach(({ type, url }) => {
+      if (type === 'photo') {
+        const img = document.createElement('img')
+        img.src = url
+        img.style.cssText = 'width:100%;border-radius:12px;margin-top:10px;max-height:220px;object-fit:cover'
+        tape.appendChild(img)
+      } else if (type === 'music' || type === 'voice') {
+        const wrap = document.createElement('div')
+        wrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid rgba(212,168,92,.3)'
+        wrap.innerHTML = `<span style="font-size:1.1rem">${type === 'music' ? '🎵' : '🎙'}</span><audio controls src="${url}" style="height:32px;flex:1;accent-color:var(--gold)"></audio>`
+        tape.appendChild(wrap)
+      }
+    })
 
     await refreshUseCounter()
     goScene(2)

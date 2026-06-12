@@ -4,31 +4,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0d0808" />
+  <meta name="theme-color" content="#000000" />
   <title>Forgivemе — Cinematic Apology Stories</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@100;200;300;400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
-    rel="stylesheet">
   <style>
     /* ─── TOKENS ───────────────────────────────────────────────── */
     :root {
-      --deep: #0d0808;
-      --deep2: #130d0d;
-      --wine: #1a0a0a;
-      --rose: #8b2020;
-      --rose2: #b03030;
-      --gold: #d4a85c;
-      --gold2: #f0c97a;
-      --cream: #faf6f0;
-      --muted: rgba(250, 246, 240, .35);
-      --glass: rgba(255, 255, 255, .04);
-      --glass2: rgba(255, 255, 255, .08);
-      --glow-rose: rgba(139, 32, 32, .25);
-      --glow-gold: rgba(212, 168, 92, .18);
-      --ff-display: 'Cormorant Garamond', serif;
-      --ff-head: 'Playfair Display', serif;
-      --ff-sans: 'Josefin Sans', sans-serif;
+      --deep: #0a0a0a;
+      --deep2: #111111;
+      --wine: #1a1a1a;
+      --rose: #FFFC00;
+      --rose2: #FFE900;
+      --gold: #FFFC00;
+      --gold2: #FFE900;
+      --cream: #ffffff;
+      --muted: rgba(255,255,255,.45);
+      --glass: rgba(255,255,255,.06);
+      --glass2: rgba(255,252,0,.12);
+      --glow-rose: rgba(255,252,0,.2);
+      --glow-gold: rgba(255,252,0,.15);
+      --ff-display: 'Helvetica Neue', 'Arial Black', sans-serif;
+      --ff-head: 'Helvetica Neue', 'Arial Black', sans-serif;
+      --ff-sans: 'Helvetica Neue', Arial, sans-serif;
+      --snap-yellow: #FFFC00;
+      --snap-black: #0a0a0a;
+      --snap-dark: #1a1a1a;
+      --snap-card: #1e1e1e;
+      --snap-border: rgba(255,252,0,.2);
+      --radius: 20px;
     }
 
     *,
@@ -62,6 +65,252 @@
     }
 
     /* ─── ORBS ───────────────────────────────────────────────── */
+    /* Orbs hidden in snap design */
+    .orb { display: none; }
+    #bg-canvas { display: none; }
+
+    /* ─── SNAPCHAT DESIGN OVERRIDES ─────────────────────────── */
+    body {
+      background: #000 !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    }
+
+    /* NAV - Snap style bottom bar feel */
+    nav {
+      background: rgba(20,20,20,.95) !important;
+      border: 1px solid rgba(255,252,0,.15) !important;
+      border-radius: 100px !important;
+      backdrop-filter: blur(20px) !important;
+    }
+    nav button { color: rgba(255,255,255,.5) !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-size: .55rem !important; letter-spacing: .1em !important; }
+    nav button.active, nav button:hover { background: #FFFC00 !important; color: #000 !important; font-weight: 700 !important; }
+
+    /* LANDING */
+    .landing-eyebrow { color: #FFFC00 !important; letter-spacing: .3em !important; }
+    .landing-title { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; font-style: normal !important; font-size: clamp(3.5rem, 14vw, 9rem) !important; color: #fff !important; line-height: .85 !important; }
+    .landing-title span { color: #FFFC00 !important; }
+    .landing-sub { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-style: normal !important; color: rgba(255,255,255,.6) !important; }
+    .stat-n { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; font-style: normal !important; color: #FFFC00 !important; font-size: 2.5rem !important; }
+    .stat-l { color: rgba(255,255,255,.5) !important; }
+
+    /* PRIMARY BUTTON - Snap yellow */
+    .btn-primary {
+      background: #FFFC00 !important;
+      border: none !important;
+      color: #000 !important;
+      font-weight: 800 !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+      font-size: .75rem !important;
+      letter-spacing: .15em !important;
+      border-radius: 100px !important;
+      box-shadow: 0 4px 20px rgba(255,252,0,.3) !important;
+    }
+    .btn-primary:hover { transform: scale(1.03) !important; box-shadow: 0 8px 30px rgba(255,252,0,.5) !important; }
+    .btn-primary::before { display: none !important; }
+
+    /* GLASS CARDS - Snap dark cards */
+    .glass-card {
+      background: #1a1a1a !important;
+      border: 1px solid rgba(255,255,255,.08) !important;
+      border-radius: 24px !important;
+    }
+
+    /* HEADERS */
+    .create-header h2 { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; font-style: normal !important; color: #fff !important; }
+    .create-header p { color: rgba(255,255,255,.4) !important; }
+    .field-label { color: #FFFC00 !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 700 !important; font-size: .6rem !important; }
+
+    /* INPUTS */
+    .field-input, .field-textarea {
+      background: #222 !important;
+      border: 1.5px solid rgba(255,255,255,.1) !important;
+      border-radius: 14px !important;
+      color: #fff !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+      font-size: 1rem !important;
+      font-style: normal !important;
+    }
+    .field-input:focus, .field-textarea:focus { border-color: #FFFC00 !important; }
+    .field-input::placeholder, .field-textarea::placeholder { color: rgba(255,255,255,.3) !important; }
+
+    /* TONE BUTTONS */
+    .tone-btn {
+      background: #1a1a1a !important;
+      border: 1.5px solid rgba(255,255,255,.1) !important;
+      color: rgba(255,255,255,.5) !important;
+      border-radius: 12px !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+      font-weight: 600 !important;
+    }
+    .tone-btn.active, .tone-btn:hover {
+      background: #FFFC00 !important;
+      border-color: #FFFC00 !important;
+      color: #000 !important;
+      font-weight: 800 !important;
+    }
+
+    /* CHIPS */
+    .chip {
+      background: #1a1a1a !important;
+      border: 1.5px solid rgba(255,255,255,.1) !important;
+      color: rgba(255,255,255,.6) !important;
+      border-radius: 100px !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+      font-weight: 600 !important;
+    }
+    .chip:hover { border-color: #FFFC00 !important; color: #FFFC00 !important; }
+
+    /* AI BUTTON */
+    .ai-generate-btn {
+      background: rgba(255,252,0,.1) !important;
+      border: 1.5px solid rgba(255,252,0,.3) !important;
+      color: #FFFC00 !important;
+      border-radius: 100px !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+      font-weight: 700 !important;
+    }
+    .ai-generate-btn:hover { background: #FFFC00 !important; color: #000 !important; }
+
+    /* USE BAR */
+    .use-bar { background: rgba(255,252,0,.05) !important; border-color: rgba(255,252,0,.15) !important; border-radius: 14px !important; }
+    .use-bar-fill { background: linear-gradient(90deg, #FFFC00, #FFE900) !important; }
+    #remaining-display { color: #FFFC00 !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; font-style: normal !important; }
+
+    /* STORY CARD - Snap dark card with yellow accent */
+    .story-card {
+      background: #111 !important;
+      border: 1px solid rgba(255,252,0,.2) !important;
+      border-radius: 28px !important;
+    }
+    .story-card::before { background: linear-gradient(90deg, transparent, #FFFC00, transparent) !important; }
+    .story-card::after { background: radial-gradient(ellipse at 30% 0%, rgba(255,252,0,.05), transparent 60%) !important; }
+    .story-to { color: #FFFC00 !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 700 !important; }
+    .story-name { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; font-style: normal !important; color: #fff !important; }
+    .story-divider { background: rgba(255,252,0,.2) !important; }
+    .story-body { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-style: normal !important; color: rgba(255,255,255,.9) !important; }
+    .story-from { color: rgba(255,252,0,.7) !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; }
+    .story-from-name { color: #FFFC00 !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; }
+
+    /* SHARE BUTTONS */
+    .btn-share {
+      background: #FFFC00 !important;
+      color: #000 !important;
+      font-weight: 800 !important;
+      border: none !important;
+      border-radius: 100px !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    }
+    .btn-copy {
+      background: #1a1a1a !important;
+      color: #fff !important;
+      border: 1.5px solid rgba(255,255,255,.12) !important;
+      border-radius: 100px !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+      font-weight: 600 !important;
+    }
+    .btn-copy:hover { border-color: #FFFC00 !important; color: #FFFC00 !important; }
+
+    /* SHARE LINK */
+    .share-link-display { background: #1a1a1a !important; border-color: rgba(255,252,0,.2) !important; border-radius: 14px !important; }
+    #share-link { color: rgba(255,255,255,.7) !important; }
+
+    /* PREMIUM SCENE */
+    #s3 { background: transparent !important; }
+    .premium-eyebrow { color: #FFFC00 !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 700 !important; }
+    .premium-title { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; font-style: normal !important; color: #fff !important; }
+    .plan-card {
+      background: #1a1a1a !important;
+      border: 1.5px solid rgba(255,255,255,.1) !important;
+      border-radius: 24px !important;
+    }
+    .plan-card.selected { border-color: #FFFC00 !important; background: rgba(255,252,0,.06) !important; }
+    .plan-name { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 800 !important; color: #fff !important; }
+    .plan-price { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; color: #FFFC00 !important; font-style: normal !important; }
+    .plan-badge { background: #FFFC00 !important; color: #000 !important; font-weight: 800 !important; border-radius: 100px !important; }
+    .feature-list li { color: rgba(255,255,255,.7) !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; }
+    .btn-unlock {
+      background: #FFFC00 !important;
+      color: #000 !important;
+      font-weight: 800 !important;
+      border: none !important;
+      border-radius: 100px !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    }
+
+    /* CARDS SCENE */
+    .cards-eyebrow { color: #FFFC00 !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 700 !important; }
+    .cards-title { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; font-style: normal !important; color: #fff !important; }
+    .cards-sub { color: rgba(255,255,255,.5) !important; }
+    .filter-chip {
+      background: #1a1a1a !important;
+      border: 1.5px solid rgba(255,255,255,.1) !important;
+      color: rgba(255,255,255,.6) !important;
+      border-radius: 100px !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+      font-weight: 600 !important;
+    }
+    .filter-chip.active { background: #FFFC00 !important; border-color: #FFFC00 !important; color: #000 !important; font-weight: 800 !important; }
+    #cards-search-input {
+      background: #1a1a1a !important;
+      border: 1.5px solid rgba(255,255,255,.1) !important;
+      border-radius: 14px !important;
+      color: #fff !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    }
+    #cards-search-input:focus { border-color: #FFFC00 !important; }
+
+    /* ACARD */
+    .acard {
+      background: #1a1a1a !important;
+      border: 1.5px solid rgba(255,255,255,.08) !important;
+      border-radius: 20px !important;
+    }
+    .acard:hover { border-color: #FFFC00 !important; transform: translateY(-3px) !important; box-shadow: 0 8px 30px rgba(255,252,0,.15) !important; }
+    .acard-num { color: rgba(255,252,0,.5) !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 700 !important; }
+    .acard-title { color: #fff !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 700 !important; font-style: normal !important; }
+    .acard-preview { color: rgba(255,255,255,.5) !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-style: normal !important; }
+    .acard-tone-badge { background: rgba(255,252,0,.12) !important; color: #FFFC00 !important; border-radius: 100px !important; font-weight: 700 !important; }
+    .acard-use-btn {
+      background: #FFFC00 !important;
+      color: #000 !important;
+      border: none !important;
+      border-radius: 100px !important;
+      font-weight: 800 !important;
+      font-family: 'Helvetica Neue', Arial, sans-serif !important;
+    }
+
+    /* MODAL */
+    .modal-backdrop { background: rgba(0,0,0,.85) !important; backdrop-filter: blur(10px) !important; }
+    .modal-card { background: #111 !important; border: 1px solid rgba(255,252,0,.2) !important; border-radius: 28px !important; }
+    .modal-num { color: rgba(255,252,0,.6) !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 700 !important; }
+    .modal-title { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; font-style: normal !important; color: #fff !important; }
+    .modal-body { font-family: 'Helvetica Neue', Arial, sans-serif !important; font-style: normal !important; color: rgba(255,255,255,.8) !important; }
+    .modal-use-btn { background: #FFFC00 !important; color: #000 !important; font-weight: 800 !important; border: none !important; border-radius: 100px !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; }
+    .modal-copy-btn { background: #1a1a1a !important; border: 1.5px solid rgba(255,255,255,.1) !important; color: #fff !important; border-radius: 100px !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 600 !important; }
+    .modal-close { color: rgba(255,255,255,.5) !important; }
+
+    /* ADMIN */
+    .admin-panel { background: #111 !important; border-color: rgba(255,252,0,.2) !important; border-radius: 24px !important; }
+    .admin-header { color: #FFFC00 !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; }
+    .admin-input { background: #1a1a1a !important; border: 1.5px solid rgba(255,255,255,.1) !important; border-radius: 12px !important; color: #fff !important; }
+    .admin-input:focus { border-color: #FFFC00 !important; }
+    .admin-btn { background: #FFFC00 !important; color: #000 !important; font-weight: 800 !important; border: none !important; border-radius: 100px !important; }
+
+    /* LOCK SCREEN */
+    .lock-overlay { background: rgba(0,0,0,.92) !important; backdrop-filter: blur(20px) !important; border-radius: 24px !important; }
+    .lock-title { color: #fff !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; font-weight: 900 !important; }
+    .lock-sub { color: rgba(255,255,255,.6) !important; }
+    .btn-unlock { background: #FFFC00 !important; color: #000 !important; font-weight: 800 !important; border-radius: 100px !important; border: none !important; }
+
+    /* LANG TOGGLE */
+    #lang-toggle { background: rgba(255,252,0,.1) !important; border: 1.5px solid rgba(255,252,0,.3) !important; color: #FFFC00 !important; border-radius: 100px !important; font-weight: 700 !important; }
+
+    /* TOAST */
+    .toast { background: #FFFC00 !important; color: #000 !important; font-weight: 700 !important; border-radius: 100px !important; border: none !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; }
+
+    /* SCROLLBAR hidden */
+    * { scrollbar-width: none; }
+    *::-webkit-scrollbar { display: none; }
     .orb {
       position: fixed;
       border-radius: 50%;
