@@ -522,6 +522,14 @@ window.checkAdmin = function checkAdmin() {
     if (createBtn) createBtn.disabled = false
 
     showToast('\u2746 Admin access \u2014 subscription & all features unlocked')
+
+    // ── Hide Premium nav button for admin ──
+    const navBtns = document.querySelectorAll('nav button')
+    navBtns.forEach(btn => {
+      if (btn.getAttribute('data-t') === 'nav_premium') {
+        btn.style.display = 'none'
+      }
+    })
   } else {
     showToast('Incorrect password')
   }
@@ -1139,6 +1147,15 @@ function renderGalleryGrid() {
       <button class="gallery-download-btn" onclick="downloadPolaroid(this, event)" title="Download">⬇</button>
     `
     grid.appendChild(card)
+
+    // Add flower sticker after every 2 cards (between rows)
+    if (i % 2 === 1 && i < memories.length - 1) {
+      const sticker = document.createElement('div')
+      sticker.style.cssText = 'grid-column:1/-1;text-align:left;padding-left:1.2rem;font-size:1.3rem;opacity:0.7;margin:-4px 0;'
+      const stickerEmojis = ['🌸', '🌼', '✿', '❀', '🌺']
+      sticker.textContent = stickerEmojis[Math.floor(i / 2) % stickerEmojis.length]
+      grid.appendChild(sticker)
+    }
   })
 }
 
