@@ -6,21 +6,21 @@
 const APP_URL = process.env.VITE_APP_URL || 'https://forgiveme.app'
 
 const TONE_PROMPTS = {
-  tender:     'warm, gentle, vulnerable — soft yet deeply sincere',
+  tender: 'warm, gentle, vulnerable — soft yet deeply sincere',
   passionate: 'fire and urgency — unrestrained, emotionally raw, intense',
   remorseful: 'deep accountability — no excuses, pure ownership of pain caused',
-  hopeful:    'forward-looking warmth — a door held open, belief in what can be',
-  poetic:     'literary beauty — rich metaphors, lyrical rhythm, unexpected imagery',
-  raw:        'stripped bare — short, direct, gut-punch honest. Every word counts'
+  hopeful: 'forward-looking warmth — a door held open, belief in what can be',
+  poetic: 'literary beauty — rich metaphors, lyrical rhythm, unexpected imagery',
+  raw: 'stripped bare — short, direct, gut-punch honest. Every word counts'
 }
 
 const CINEMATIC_SCENES = {
-  tender:     ['dusk light through curtains', 'a familiar song on a quiet street', 'an old photograph discovered', 'two cups of tea going cold', 'rain on a window at dawn'],
+  tender: ['dusk light through curtains', 'a familiar song on a quiet street', 'an old photograph discovered', 'two cups of tea going cold', 'rain on a window at dawn'],
   passionate: ['a thunderstorm at midnight', 'an airport goodbye that lasted too long', 'a fire that refuses to die', 'the last train leaving the station', 'hands that reach and miss'],
   remorseful: ['a letter written and rewritten', 'an empty chair at a dinner table', 'rain against a window at 3am', 'a cracked mirror', 'a road that leads back'],
-  hopeful:    ['sunrise over a familiar rooftop', 'a single flower pushing through concrete', 'the first warm day after winter', 'an open window in spring', 'a new notebook, first page blank'],
-  poetic:     ['light refracting through water', 'stars visible only when the city sleeps', 'the space between two people on a park bench', 'a candle in an empty room', 'footprints in sand'],
-  raw:        ['a cracked phone screen with their name on it', 'the last text message re-read a hundred times', 'silence where their voice used to be', 'an unanswered door', 'a stopped clock']
+  hopeful: ['sunrise over a familiar rooftop', 'a single flower pushing through concrete', 'the first warm day after winter', 'an open window in spring', 'a new notebook, first page blank'],
+  poetic: ['light refracting through water', 'stars visible only when the city sleeps', 'the space between two people on a park bench', 'a candle in an empty room', 'footprints in sand'],
+  raw: ['a cracked phone screen with their name on it', 'the last text message re-read a hundred times', 'silence where their voice used to be', 'an unanswered door', 'a stopped clock']
 }
 
 export default async function handler(req, res) {
@@ -80,7 +80,7 @@ Return ONLY the message. No titles, no labels.`
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer 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`
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
